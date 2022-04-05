@@ -5,11 +5,11 @@ const thoughtController = {
     getAllThoughts(req, res) {
         Thought.find({})
         .populate({
-            path: 'user',
+            path: 'reactions',
             select: '-__v'
         })
         .select('-__v')
-        .sort({ _id: -1 })
+        // .sort({ _id: -1 })
         .then(dbThoughtData => res.json(dbThoughtData))
         .catch(err => {
             console.log(err);
@@ -20,12 +20,7 @@ const thoughtController = {
     //get one thought by ID
     getThoughtById({ params }, res) {
         Thought.findOne({ _id: params.id })
-            .populate({
-                path: 'user',
-                select: '-__v'
-            })
-           .select('-__v')
-           .sort({ _id: -1 })
+    
            .then(dbThoughtData => res.json(dbThoughtData))
            .catch(err => {
                console.log(err);
@@ -98,8 +93,11 @@ const thoughtController = {
     },
 
     //delete a thought by ID
-    deleteThought({ params, body}, res) {
-        Thought.findOneAndDelete({ _id: params.id })
+    deleteThought({ params,}, res) {
+        Thought.findOneAndDelete({ _id: params.thoughtId },
+        { $pull: { reactions: { reactionId: params.reactionId } } },
+        { new: true }
+      )
         .then(deletedThought => {
             if (!deletedThought) {
                 return res.status(404).json({ message: 'No thought with this ID!'})
